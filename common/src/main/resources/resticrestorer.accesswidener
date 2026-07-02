@@ -1,0 +1,9 @@
+accessWidener	v2	named
+
+# Needed to reach the live per-dimension IOWorkers for raw entity/POI NBT read+write (see SPEC.md M4b/M4c).
+# Region NBT needs no widening: ServerChunkCache.chunkMap is public and (as a ChunkStorage) exposes public
+# read/write/flushWorker directly.
+accessible field net/minecraft/server/level/ServerLevel entityManager Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;
+accessible field net/minecraft/world/level/entity/PersistentEntitySectionManager permanentStorage Lnet/minecraft/world/level/entity/EntityPersistentStorage;
+accessible field net/minecraft/world/level/chunk/storage/EntityStorage worker Lnet/minecraft/world/level/chunk/storage/IOWorker;
+accessible field net/minecraft/world/level/chunk/storage/SectionStorage worker Lnet/minecraft/world/level/chunk/storage/IOWorker;
