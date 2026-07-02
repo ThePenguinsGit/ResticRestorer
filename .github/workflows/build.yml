@@ -31,13 +31,22 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace
 
-      - name: Upload mod jars
+      - name: Upload Fabric jar
         uses: actions/upload-artifact@v4
         with:
-          name: resticrestorer-jars
+          name: resticrestorer-fabric
           if-no-files-found: error
           path: |
             fabric/build/libs/*.jar
+            !fabric/build/libs/*-dev-shadow.jar
+            !fabric/build/libs/*-sources.jar
+
+      - name: Upload Forge jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: resticrestorer-forge
+          if-no-files-found: error
+          path: |
             forge/build/libs/*.jar
-            !**/*-dev-shadow.jar
-            !**/*-sources.jar
+            !forge/build/libs/*-dev-shadow.jar
+            !forge/build/libs/*-sources.jar
