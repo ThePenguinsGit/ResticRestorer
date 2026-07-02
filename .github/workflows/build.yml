@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
   workflow_dispatch:
 
@@ -12,12 +13,14 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -29,24 +32,43 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build
-        run: ./gradlew build --stacktrace
+        run: |
+          ARGS=""
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            ARGS="-Pmod_version=${GITHUB_REF_NAME#v}"
+          fi
+          ./gradlew build --stacktrace $ARGS
 
       - name: Upload Fabric jar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: resticrestorer-fabric
           if-no-files-found: error
+          archive: false
           path: |
             fabric/build/libs/*.jar
             !fabric/build/libs/*-dev-shadow.jar
             !fabric/build/libs/*-sources.jar
 
       - name: Upload Forge jar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: resticrestorer-forge
           if-no-files-found: error
+          archive: false
           path: |
             forge/build/libs/*.jar
             !forge/build/libs/*-dev-shadow.jar
             !forge/build/libs/*-sources.jar
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          files:
+            fabric/build/libs/*.jar
+            forge/build/libs/*.jar
+            !**/*-dev-shadow.jar
+            !**/*-sources.jar
+          fail_on_unmatched_files: true
+          generate_release_notes: true
