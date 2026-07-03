@@ -21,3 +21,87 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+// --- Bundled restic binary --------------------------------------------------------------------------------
+// Download restic's official release binaries at build time, verify each against the release's own SHA256SUMS,
+// and gzip-pack them as jar resources (restic/<os>-<arch>/restic.gz). At runtime BundledRestic extracts the
+// matching one so the mod can run without restic installed on the host. Deliberately wired into the `jar` task
+// only (NOT processResources): unit tests run against the classes/resources dirs and must never trigger this
+// network download, while every jar we actually ship (and thus the shadow-bundled loader jars) includes it.
+def resticVersion = project.findProperty('restic_version') ?: '0.19.0'
+def resticTargets = [[os: 'linux', arch: 'amd64'], [os: 'linux', arch: 'arm64']]
+def resticResourcesDir = layout.buildDirectory.dir('generated/restic-resources')
+
+def bundleRestic = tasks.register('bundleRestic') {
+    description = 'Downloads + checksum-verifies restic and packs it as a gzip jar resource.'
+    group = 'build'
+    inputs.property('resticVersion', resticVersion)
+    inputs.property('resticTargets', resticTargets.collect { "${it.os}-${it.arch}" }.join(','))
+    outputs.dir(resticResourcesDir)
+    outputs.cacheIf { true }
+    doLast {
+        def base = "https://github.com/restic/restic/releases/download/v${resticVersion}"
+        def work = layout.buildDirectory.dir('restic-download').get().asFile
+        work.mkdirs()
+        def root = new File(resticResourcesDir.get().asFile, 'restic')
+        root.deleteDir()
+        root.mkdirs()
+
+        // Fetch the release's own checksum manifest once, then verify every artifact against it.
+        def sumsFile = new File(work, "SHA256SUMS-${resticVersion}")
+        if (!sumsFile.exists()) {
+            ant.get(src: "${base}/SHA256SUMS", dest: sumsFile)
+        }
+        def sums = [:]
+        sumsFile.eachLine { line ->
+            def m = (line.trim() =~ /^([0-9a-fA-F]{64})\s+\*?(\S+)$/)
+            if (m.matches()) {
+                sums[m.group(2)] = m.group(1).toLowerCase()
+            }
+        }
+
+        resticTargets.each { t ->
+            def artifact = "restic_${resticVersion}_${t.os}_${t.arch}.bz2"
+            def bz2 = new File(work, artifact)
+            if (!bz2.exists()) {
+                ant.get(src: "${base}/${artifact}", dest: bz2)
+            }
+            def expected = sums[artifact]
+            if (!expected) {
+                throw new GradleException("SHA256SUMS has no entry for ${artifact} — is restic_version=${resticVersion} correct?")
+            }
+            def actual = java.security.MessageDigest.getInstance('SHA-256').digest(bz2.bytes).encodeHex().toString()
+            if (actual != expected) {
+                throw new GradleException("Checksum mismatch for ${artifact}: expected ${expected}, got ${actual}")
+            }
+
+            // restic ships the raw binary bzip2-compressed; decompress then re-gzip so the runtime can use the
+            // JDK's built-in GZIPInputStream (no bzip2 runtime dependency).
+            def raw = new File(work, "restic_${t.os}_${t.arch}")
+            raw.delete()
+            ant.bunzip2(src: bz2, dest: raw)
+
+            def archDir = new File(root, "${t.os}-${t.arch}")
+            archDir.mkdirs()
+            new File(archDir, 'restic.gz').withOutputStream { fos ->
+                new java.util.zip.GZIPOutputStream(fos).withStream { gzos ->
+                    raw.withInputStream { ins -> gzos << ins }
+                }
+            }
+        }
+
+        // Version marker (runtime cache key) + license text for redistribution compliance (best-effort).
+        new File(root, 'version.properties').text = "version=${resticVersion}\n"
+        try {
+            ant.get(src: "https://raw.githubusercontent.com/restic/restic/v${resticVersion}/LICENSE",
+                    dest: new File(root, 'LICENSE.txt'))
+        } catch (ignored) {
+            logger.warn("Could not fetch restic LICENSE for bundling (non-fatal)")
+        }
+    }
+}
+
+tasks.named('jar') {
+    dependsOn bundleRestic
+    from(resticResourcesDir)
+}

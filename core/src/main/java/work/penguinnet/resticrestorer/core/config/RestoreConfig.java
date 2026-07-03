@@ -54,6 +54,11 @@ public record RestoreConfig(BackupConfig backup, WorldConfig world, RabbitMqConf
      *       has no filesystem access to the repo. The {@code rest:} scheme is required, exactly as restic expects.</li>
      * </ul>
      *
+     * <p>{@code binary} is the restic executable: a path or PATH name (default {@code "restic"}), or the special
+     * value {@code "bundled"} to use the restic binary shipped inside the mod jar (extracted on first use) — handy
+     * for containers that don't have restic installed. The bundled binary is only available for the platforms
+     * packaged at build time (Linux amd64/arm64); elsewhere, install restic and point {@code binary} at it.
+     *
      * <p>{@code tagFilter}/{@code hostFilter} scope which snapshots this server may see — essential when a single
      * shared repository holds snapshots from several servers. Set {@code tagFilter} to the Backrest plan tag
      * (e.g. {@code plan:my-survival-server}) so other servers' snapshots are invisible to {@code listSnapshots}

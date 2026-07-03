@@ -36,15 +36,36 @@ public final class ResticCliBackupRepository implements BackupRepository {
 
     private final RestoreConfig.ResticConfig config;
     private final String snapshotWorldPrefix;
+    private volatile String resolvedBinary;
 
     public ResticCliBackupRepository(RestoreConfig.ResticConfig config, String snapshotWorldPrefix) {
         this.config = config;
         this.snapshotWorldPrefix = snapshotWorldPrefix;
     }
 
+    /**
+     * The restic executable to invoke: the jar-bundled binary (extracted on first use) when
+     * {@code restic.binary} is {@code "bundled"}, otherwise the configured path/PATH name verbatim.
+     */
+    private String binary() {
+        String cached = resolvedBinary;
+        if (cached == null) {
+            synchronized (this) {
+                cached = resolvedBinary;
+                if (cached == null) {
+                    cached = BundledRestic.SENTINEL.equalsIgnoreCase(config.binary())
+                            ? BundledRestic.resolve().toString()
+                            : config.binary();
+                    resolvedBinary = cached;
+                }
+            }
+        }
+        return cached;
+    }
+
     @Override
     public List<Snapshot> listSnapshots() {
-        List<String> command = new ArrayList<>(List.of(config.binary(), "snapshots", "--json"));
+        List<String> command = new ArrayList<>(List.of(binary(), "snapshots", "--json"));
         if (config.hostFilter() != null && !config.hostFilter().isBlank()) {
             command.add("--host");
             command.add(config.hostFilter());
@@ -83,7 +104,7 @@ public final class ResticCliBackupRepository implements BackupRepository {
 
     @Override
     public void fetchFiles(String snapshotId, List<String> worldRelativePaths, Path targetDir) {
-        List<String> command = new ArrayList<>(List.of(config.binary(), "restore", snapshotId, "--target", targetDir.toString()));
+        List<String> command = new ArrayList<>(List.of(binary(), "restore", snapshotId, "--target", targetDir.toString()));
         for (String relPath : worldRelativePaths) {
             command.add("--include");
             command.add(joinPath(snapshotWorldPrefix, relPath));
