@@ -94,8 +94,9 @@ public final class MinecraftBridge1201 implements MinecraftBridge {
             // this, a misconfigured prefix makes every restore "succeed" while writing nothing.
             throw new IllegalStateException("No chunk data found in the fetched backup for (" + chunkX + ", " + chunkZ
                     + ") in " + dimensionId + " — searched " + dimBase.resolve(REGION_DIR) + " (and entities/poi "
-                    + "siblings). This usually means backup.snapshotWorldPrefix in resticrestorer.json doesn't "
-                    + "match the absolute path the world was backed up from; check with `restic ls <snapshot>`.");
+                    + "siblings). This usually means a prefix in resticrestorer.json is wrong: backup.snapshotWorldPrefix "
+                    + "(what restic --include matches inside the snapshot) or backup.serverWorldPrefix (where the "
+                    + "restored files land under the target); check both against `restic ls <snapshot>`.");
         }
         return new PreparedChunk(dimensionId, chunkX, chunkZ, region, entities, poi);
     }
@@ -159,8 +160,8 @@ public final class MinecraftBridge1201 implements MinecraftBridge {
         Path datFile = backupMirrorRoot.resolve(PLAYERDATA_DIR).resolve(playerId + ".dat");
         if (!Files.isRegularFile(datFile)) {
             throw new IllegalStateException("No player data file for " + playerId + " found in the fetched backup at "
-                    + datFile + " — check backup.snapshotWorldPrefix in resticrestorer.json, and that this player "
-                    + "existed at that snapshot (`restic ls <snapshot>`).");
+                    + datFile + " — check backup.snapshotWorldPrefix / backup.serverWorldPrefix in resticrestorer.json, "
+                    + "and that this player existed at that snapshot (`restic ls <snapshot>`).");
         }
         try {
             return new PreparedPlayer(playerId, Files.readAllBytes(datFile));

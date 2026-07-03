@@ -20,8 +20,10 @@ public interface BackupRepository {
 
     /**
      * Fetches the given world-relative paths at a snapshot into {@code targetDir}, mirroring the snapshot's
-     * on-disk structure. Missing paths (e.g. an absent {@code .mcc}) are skipped, not errors. The restored
-     * mirror root is deterministic from config: {@code targetDir.resolve(snapshotWorldPrefix)}.
+     * on-disk structure. The paths are matched inside the repository using {@code snapshotWorldPrefix}; missing
+     * paths (e.g. an absent {@code .mcc}) are skipped, not errors. The restored mirror root is deterministic from
+     * config: {@code targetDir.resolve(effectiveServerWorldPrefix())} (which is {@code snapshotWorldPrefix} unless
+     * a distinct {@code serverWorldPrefix} is configured).
      */
     void fetchFiles(String snapshotId, List<String> worldRelativePaths, Path targetDir);
 }

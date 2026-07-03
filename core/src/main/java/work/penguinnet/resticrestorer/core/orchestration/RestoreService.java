@@ -144,7 +144,7 @@ public final class RestoreService {
         try {
             Snapshot snapshot = resolveSnapshot(request.snapshotRef());
             backupRepository.fetchFiles(snapshot.id(), files, tempDir);
-            Path mirrorRoot = tempDir.resolve(stripLeadingSlashes(config.backup().snapshotWorldPrefix()));
+            Path mirrorRoot = tempDir.resolve(stripLeadingSlashes(config.backup().effectiveServerWorldPrefix()));
             PreparedChunk prepared = bridge.prepare(mirrorRoot, request.dimensionId(), request.chunkX(), request.chunkZ());
 
             return bridge.apply(prepared)
@@ -169,7 +169,7 @@ public final class RestoreService {
         try {
             Snapshot snapshot = resolveSnapshot(request.snapshotRef());
             backupRepository.fetchFiles(snapshot.id(), files, tempDir);
-            Path mirrorRoot = tempDir.resolve(stripLeadingSlashes(config.backup().snapshotWorldPrefix()));
+            Path mirrorRoot = tempDir.resolve(stripLeadingSlashes(config.backup().effectiveServerWorldPrefix()));
             PreparedPlayer prepared = bridge.preparePlayer(mirrorRoot, playerId);
 
             return bridge.applyPlayer(prepared)
