@@ -9,10 +9,9 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import work.penguinnet.resticrestorer.core.backup.BackupRepository;
+import work.penguinnet.resticrestorer.RestoreServices;
 import work.penguinnet.resticrestorer.core.orchestration.RestoreRequest;
 import work.penguinnet.resticrestorer.core.orchestration.RestoreResult;
-import work.penguinnet.resticrestorer.core.orchestration.RestoreService;
 import work.penguinnet.resticrestorer.core.orchestration.SnapshotRef;
 import work.penguinnet.resticrestorer.core.permission.PermissionCheck;
 
@@ -23,17 +22,14 @@ public final class RestoreChunkCommand {
     public static final String PERMISSION_NODE = "resticrestorer.command.restorechunk";
     private static final int FALLBACK_OP_LEVEL = 3;
 
-    private final RestoreService restoreService;
+    private final RestoreServices services;
     private final PermissionCheck permissionCheck;
-    private final String defaultDimensionId;
     private final SnapshotSupport snapshots;
 
-    public RestoreChunkCommand(RestoreService restoreService, BackupRepository backupRepository,
-                                PermissionCheck permissionCheck, String defaultDimensionId) {
-        this.restoreService = restoreService;
+    public RestoreChunkCommand(RestoreServices services, PermissionCheck permissionCheck) {
+        this.services = services;
         this.permissionCheck = permissionCheck;
-        this.defaultDimensionId = defaultDimensionId;
-        this.snapshots = new SnapshotSupport(backupRepository);
+        this.snapshots = new SnapshotSupport(services::backupRepository);
     }
 
     public void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -55,13 +51,13 @@ public final class RestoreChunkCommand {
         String snapshotArg = StringArgumentType.getString(ctx, "snapshot");
         String dimensionId = dimensionOverride != null
                 ? dimensionOverride.dimension().location().toString()
-                : defaultDimensionId;
+                : services.defaultDimensionId();
 
         SnapshotRef ref = snapshots.parse(snapshotArg);
         RestoreRequest request = new RestoreRequest(dimensionId, x, z, ref);
 
         source.sendSuccess(() -> Component.literal("Restoring chunk (" + x + ", " + z + ") in " + dimensionId + "..."), true);
-        restoreService.submit(request).whenComplete((result, throwable) ->
+        services.restoreService().submit(request).whenComplete((result, throwable) ->
                 source.getServer().execute(() -> reportResult(source, result, throwable)));
         return 1;
     }

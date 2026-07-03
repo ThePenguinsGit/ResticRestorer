@@ -7,9 +7,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
-import work.penguinnet.resticrestorer.core.backup.BackupRepository;
+import work.penguinnet.resticrestorer.RestoreServices;
 import work.penguinnet.resticrestorer.core.orchestration.PlayerRestoreRequest;
-import work.penguinnet.resticrestorer.core.orchestration.RestoreService;
 import work.penguinnet.resticrestorer.core.orchestration.SnapshotRef;
 import work.penguinnet.resticrestorer.core.permission.PermissionCheck;
 
@@ -21,15 +20,14 @@ public final class RestorePlayerCommand {
     public static final String PERMISSION_NODE = "resticrestorer.command.restoreplayer";
     private static final int FALLBACK_OP_LEVEL = 3;
 
-    private final RestoreService restoreService;
+    private final RestoreServices services;
     private final PermissionCheck permissionCheck;
     private final SnapshotSupport snapshots;
 
-    public RestorePlayerCommand(RestoreService restoreService, BackupRepository backupRepository,
-                                 PermissionCheck permissionCheck) {
-        this.restoreService = restoreService;
+    public RestorePlayerCommand(RestoreServices services, PermissionCheck permissionCheck) {
+        this.services = services;
         this.permissionCheck = permissionCheck;
-        this.snapshots = new SnapshotSupport(backupRepository);
+        this.snapshots = new SnapshotSupport(services::backupRepository);
     }
 
     public void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -51,7 +49,7 @@ public final class RestorePlayerCommand {
         PlayerRestoreRequest request = new PlayerRestoreRequest(playerSelector, ref);
 
         source.sendSuccess(() -> Component.literal("Restoring player " + playerSelector + "..."), true);
-        restoreService.submitPlayer(request).whenComplete((result, throwable) ->
+        services.restoreService().submitPlayer(request).whenComplete((result, throwable) ->
                 source.getServer().execute(() -> RestoreChunkCommand.reportResult(source, result, throwable)));
         return 1;
     }

@@ -5,6 +5,7 @@ import net.minecraftforge.server.permission.events.PermissionGatherEvent;
 import net.minecraftforge.server.permission.nodes.PermissionNode;
 import net.minecraftforge.server.permission.nodes.PermissionTypes;
 import work.penguinnet.resticrestorer.Resticrestorer;
+import work.penguinnet.resticrestorer.mc.command.ReloadCommand;
 import work.penguinnet.resticrestorer.mc.command.RestoreChunkCommand;
 import work.penguinnet.resticrestorer.mc.command.RestorePlayerCommand;
 
@@ -33,6 +34,7 @@ public final class ForgePermissionNodes {
     private static void onGatherNodes(PermissionGatherEvent.Nodes event) {
         register(event, RestoreChunkCommand.PERMISSION_NODE, "command.restorechunk");
         register(event, RestorePlayerCommand.PERMISSION_NODE, "command.restoreplayer");
+        register(event, ReloadCommand.PERMISSION_NODE, "command.reload");
     }
 
     private static void register(PermissionGatherEvent.Nodes event, String fullNodeName, String nodePath) {

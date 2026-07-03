@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 /**
  * Shared snapshot-argument handling for the restore commands: async, cached suggestions of snapshot times
@@ -26,15 +27,15 @@ public final class SnapshotSupport {
     private static final DateTimeFormatter SNAPSHOT_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss").withZone(ZoneOffset.UTC);
 
-    private final BackupRepository backupRepository;
+    private final Supplier<BackupRepository> backupRepository;
     private final SnapshotCache snapshotCache = new SnapshotCache();
 
-    public SnapshotSupport(BackupRepository backupRepository) {
+    public SnapshotSupport(Supplier<BackupRepository> backupRepository) {
         this.backupRepository = backupRepository;
     }
 
     public CompletableFuture<Suggestions> suggest(SuggestionsBuilder builder) {
-        snapshotCache.refreshAsync(backupRepository);
+        snapshotCache.refreshAsync(backupRepository.get());
         return CompletableFuture.supplyAsync(() -> {
             String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
             for (Snapshot snapshot : snapshotCache.cached()) {
