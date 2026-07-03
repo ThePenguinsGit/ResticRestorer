@@ -66,9 +66,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            fabric/build/libs/*.jar
-            forge/build/libs/*.jar
-            !**/*-dev-shadow.jar
-            !**/*-sources.jar
-          fail_on_unmatched_files: true
+            fabric/build/libs/*[!sources|dev-shadow].jar
+            forge/build/libs/*[!sources|dev-shadow].jar
+          fail_on_unmatched_files: false
           generate_release_notes: true
