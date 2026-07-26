@@ -1,4 +1,6 @@
 modLoader = "javafml"
+# javafml reports only its major version (FML logs "found 47"), so this range can't carry a patch-level
+# minimum — the mod's real Forge floor is the forge dependency's versionRange below.
 loaderVersion = "[47,)"
 #issueTrackerURL = ""
 license = "All Rights Reserved"
@@ -16,7 +18,10 @@ Restores an individual chunk in place from a restic backup of the world, via com
 [[dependencies.resticrestorer]]
 modId = "forge"
 mandatory = true
-versionRange = "[47,)"
+# 47.3.10 is the oldest 1.20.1 Forge whose FMLModContainer injects FMLJavaModLoadingContext into the mod
+# constructor (47.3.7 still only looks for a no-arg one). ResticrestorerForge takes that constructor, so older
+# Forge builds have to be rejected with a readable message rather than failing to construct the mod.
+versionRange = "[47.3.10,)"
 ordering = "NONE"
 side = "BOTH"
 
