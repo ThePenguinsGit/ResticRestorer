@@ -8,8 +8,9 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * SPI implemented by the Minecraft adapters ({@code AbstractMinecraftBridge} in {@code shared/mc}, plus a
- * {@code VersionBridge} per supported version in {@code :common-<ver>}). No Minecraft
- * types in this signature — see SPEC.md's "one seam" note.
+ * {@code VersionBridge} per supported version in {@code :common-<ver>}). This is the one seam between :core
+ * and Minecraft: no {@code net.minecraft} type may appear in these signatures, which is what keeps the restic,
+ * config and orchestration code compiling once for every supported version.
  */
 public interface MinecraftBridge {
 

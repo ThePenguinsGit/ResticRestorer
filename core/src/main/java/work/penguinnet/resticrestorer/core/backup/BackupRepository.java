@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Swappable backup source (see SPEC.md M2). The CLI-based restic implementation is the only one shipped
+ * Swappable backup source. The CLI-based restic implementation is the only one shipped
  * today; a future REST-API implementation drops in here with no changes to the rest of the mod.
  */
 public interface BackupRepository {

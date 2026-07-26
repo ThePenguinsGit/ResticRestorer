@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Stub for a future REST-API-backed {@link BackupRepository} (see SPEC.md M2) — exists to make the swap
+ * Stub for a future REST-API-backed {@link BackupRepository} — exists to make the swap
  * seam visible; not implemented yet.
  */
 public final class RestApiBackupRepository implements BackupRepository {

@@ -15,7 +15,7 @@ import java.io.UncheckedIOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * One in-flight evict -> write -> reload -> restore-tickets run for a single chunk (see SPEC.md M4c).
+ * One in-flight evict -> write -> reload -> restore-tickets run for a single chunk.
  * {@link #start()} runs once on the main thread; {@link #tick()} is then polled once per server tick
  * (also main-thread, via {@code TickEvent.SERVER_POST}) until it returns {@code true}. The entity/POI
  * writes go through {@link VersionRegionStorage}, the one part of this that differs per Minecraft version.

@@ -8,7 +8,7 @@ plugins {
 // The single source of truth for what this repo builds. Every supported version is listed symmetrically —
 // none of them is a default — and every module name is derived from a key here (`common-<key>`,
 // `<loader>-<key>`). Adding a version = one row here + the matching properties in gradle.properties + a
-// `common-<key>` adapter module and its loader modules (see SPEC.md).
+// `common-<key>` adapter module and its loader modules.
 ext.mcVersions = [
         '1201': [mc: minecraft_version_1201, java: 17, loaders: ['fabric', 'forge'],
                  architectury: architectury_api_version_1201],
@@ -100,7 +100,7 @@ subprojects {
     }
 }
 
-// :core is a plain java-library module with NO Minecraft/Loom dependency (see SPEC.md M0) — it must stay
+// :core is a plain java-library module with NO Minecraft/Loom dependency — it must stay
 // free of net.minecraft imports so the MC-version adapters can reuse it unchanged.
 configure(subprojects.findAll { it.name != 'core' }) {
     apply plugin: 'dev.architectury.loom'

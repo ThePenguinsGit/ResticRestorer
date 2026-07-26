@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * Trigger-agnostic async restore pipeline (see SPEC.md M3). Both the command and the RabbitMQ consumer
+ * Trigger-agnostic async restore pipeline. Both the command and the RabbitMQ consumer
  * build a {@link RestoreRequest} and call {@link #submit}; this class owns the concurrency guard, the
  * fetch/prepare/apply ordering, and temp-dir cleanup.
  */

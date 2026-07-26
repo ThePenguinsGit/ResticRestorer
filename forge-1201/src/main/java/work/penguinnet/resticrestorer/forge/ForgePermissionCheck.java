@@ -9,7 +9,7 @@ import work.penguinnet.resticrestorer.core.permission.PermissionCheck;
 /**
  * Queries a registered {@link PermissionNode} (LuckPerms and other permission mods provide values for it via
  * Forge's PermissionAPI); falls back to the vanilla op-level check for non-player sources or if the node
- * hasn't been registered yet (see SPEC.md M5).
+ * hasn't been registered yet.
  */
 public final class ForgePermissionCheck implements PermissionCheck {
     @Override

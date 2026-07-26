@@ -3,7 +3,7 @@ package work.penguinnet.resticrestorer.core.permission;
 import java.util.List;
 
 /**
- * The permission nodes backing the mod's commands (see SPEC.md M5). Every loader needs this same table — the
+ * The permission nodes backing the mod's commands. Every loader needs this same table — the
  * command classes gate on it, and the Forge-family loaders additionally register each node with their
  * PermissionAPI — so it lives here instead of being spread across the command and loader classes.
  */

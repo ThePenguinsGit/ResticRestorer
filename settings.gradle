@@ -14,7 +14,8 @@ rootProject.name = 'resticrestorer'
 include 'core'
 
 // One module group per supported Minecraft version. No group is "the default" — every module name carries its
-// version key, and the shared source trees under shared/ carry none. See SPEC.md for how to add a version.
+// version key, and the shared source trees under shared/ carry none. Adding a version means a suffixed block in
+// gradle.properties, a row in root build.gradle's `mcVersions` table, and the modules listed here.
 include 'common-1201'
 include 'fabric-1201'
 include 'forge-1201'

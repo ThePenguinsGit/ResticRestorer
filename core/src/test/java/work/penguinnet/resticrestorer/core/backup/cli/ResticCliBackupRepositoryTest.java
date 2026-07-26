@@ -20,8 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Exercises {@link ResticCliBackupRepository} against a real throwaway local restic repo (see SPEC.md M2's
- * verification step). Skipped entirely if the {@code restic} binary isn't on PATH.
+ * Exercises {@link ResticCliBackupRepository} against a real throwaway local restic repo: init, backup, list,
+ * resolve and fetch, so the CLI adapter is checked against restic itself rather than a stub. Skipped entirely
+ * if the {@code restic} binary isn't on PATH.
  */
 class ResticCliBackupRepositoryTest {
 

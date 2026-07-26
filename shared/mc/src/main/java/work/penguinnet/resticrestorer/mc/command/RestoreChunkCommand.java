@@ -17,7 +17,7 @@ import work.penguinnet.resticrestorer.core.permission.PermissionCheck;
 import work.penguinnet.resticrestorer.core.permission.PermissionNodes;
 
 /**
- * {@code /restore-chunk <x> <z> <snapshot> [dimension]} (see SPEC.md M5).
+ * {@code /restore-chunk <x> <z> <snapshot> [dimension]}.
  */
 public final class RestoreChunkCommand {
     private static final PermissionNodes.Node NODE = PermissionNodes.RESTORE_CHUNK;

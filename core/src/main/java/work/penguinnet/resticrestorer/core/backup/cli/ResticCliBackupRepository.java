@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * {@link BackupRepository} backed by shelling out to the restic CLI (see SPEC.md M2).
+ * {@link BackupRepository} backed by shelling out to the restic CLI.
  */
 public final class ResticCliBackupRepository implements BackupRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResticCliBackupRepository.class);

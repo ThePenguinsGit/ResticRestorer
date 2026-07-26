@@ -19,7 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Consumes {@code { "x": int, "y": int, "snapshotId": string }} messages (JSON {@code y} -> chunk Z) and
- * hands them to {@link RestoreService} (see SPEC.md M6). Runs entirely on its own thread — never touches
+ * hands them to {@link RestoreService}. Runs entirely on its own thread — never touches
  * the world directly; {@code RestoreService}/{@code MinecraftBridge} marshal onto the main thread themselves.
  */
 public final class RabbitConsumer {

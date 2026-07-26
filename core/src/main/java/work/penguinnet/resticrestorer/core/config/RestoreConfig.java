@@ -3,7 +3,7 @@ package work.penguinnet.resticrestorer.core.config;
 import java.util.List;
 
 /**
- * Root config tree for ResticRestorer. Plain data — no Minecraft types (see SPEC.md M1).
+ * Root config tree for ResticRestorer. Plain data — no Minecraft types.
  */
 public record RestoreConfig(BackupConfig backup, WorldConfig world, RabbitMqConfig rabbitmq, RestoreSettings restore) {
 
@@ -89,7 +89,7 @@ public record RestoreConfig(BackupConfig backup, WorldConfig world, RabbitMqConf
         }
     }
 
-    /** Reserved for the future REST-API BackupRepository implementation (see SPEC.md M2). */
+    /** Reserved for the future REST-API BackupRepository implementation. */
     public record RestApiConfig(String baseUrl, String apiKey) {
         public static RestApiConfig createDefault() {
             return new RestApiConfig(null, null);

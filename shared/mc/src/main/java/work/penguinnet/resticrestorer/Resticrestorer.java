@@ -15,7 +15,7 @@ import work.penguinnet.resticrestorer.mc.command.RestorePlayerCommand;
 import work.penguinnet.resticrestorer.mc.impl.VersionBridge;
 
 /**
- * Wires core + the running version's adapter together (see SPEC.md M7). Called from each loader's entrypoint with
+ * Wires core + the running version's adapter together. Called from each loader's entrypoint with
  * that loader's {@link PermissionCheck} implementation. Everything registered here is event-driven (command
  * registration, server lifecycle) so it's inert — and safe — on a pure client distribution that never starts
  * a server; an integrated (singleplayer) server still triggers it normally.

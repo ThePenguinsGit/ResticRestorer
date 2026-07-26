@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
 /**
- * The whole of {@link MinecraftBridge} (see SPEC.md M4) except the handful of calls whose signatures differ
+ * The whole of {@link MinecraftBridge} except the handful of calls whose signatures differ
  * between Minecraft versions. Those are the abstract methods at the bottom of this class; each supported
  * version implements them in its own {@code VersionBridge}, which is the only Minecraft-version-specific
  * code in the mod besides {@link VersionRegionStorage} and the access widener.
