@@ -39,34 +39,58 @@ jobs:
           fi
           ./gradlew build --stacktrace $ARGS
 
-      - name: Upload Fabric jar
+      - name: Upload Fabric 1.20.1 jar
         uses: actions/upload-artifact@v7
         with:
-          name: resticrestorer-fabric
+          name: resticrestorer-fabric-1.20.1
           if-no-files-found: error
           archive: false
           path: |
-            fabric/build/libs/*.jar
-            !fabric/build/libs/*-dev-shadow.jar
-            !fabric/build/libs/*-sources.jar
+            fabric-1201/build/libs/*.jar
+            !fabric-1201/build/libs/*-dev-shadow.jar
+            !fabric-1201/build/libs/*-sources.jar
 
-      - name: Upload Forge jar
+      - name: Upload Forge 1.20.1 jar
         uses: actions/upload-artifact@v7
         with:
-          name: resticrestorer-forge
+          name: resticrestorer-forge-1.20.1
           if-no-files-found: error
           archive: false
           path: |
-            forge/build/libs/*.jar
-            !forge/build/libs/*-dev-shadow.jar
-            !forge/build/libs/*-sources.jar
+            forge-1201/build/libs/*.jar
+            !forge-1201/build/libs/*-dev-shadow.jar
+            !forge-1201/build/libs/*-sources.jar
+
+      - name: Upload Fabric 1.21.1 jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: resticrestorer-fabric-1.21.1
+          if-no-files-found: error
+          archive: false
+          path: |
+            fabric-1211/build/libs/*.jar
+            !fabric-1211/build/libs/*-dev-shadow.jar
+            !fabric-1211/build/libs/*-sources.jar
+
+      - name: Upload NeoForge 1.21.1 jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: resticrestorer-neoforge-1.21.1
+          if-no-files-found: error
+          archive: false
+          path: |
+            neoforge-1211/build/libs/*.jar
+            !neoforge-1211/build/libs/*-dev-shadow.jar
+            !neoforge-1211/build/libs/*-sources.jar
 
       - name: Create release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            fabric/build/libs/*[!sources|dev-shadow].jar
-            forge/build/libs/*[!sources|dev-shadow].jar
+            fabric-1201/build/libs/*[!sources|dev-shadow].jar
+            forge-1201/build/libs/*[!sources|dev-shadow].jar
+            fabric-1211/build/libs/*[!sources|dev-shadow].jar
+            neoforge-1211/build/libs/*[!sources|dev-shadow].jar
           fail_on_unmatched_files: false
           generate_release_notes: true

@@ -7,7 +7,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * SPI implemented by version-specific adapters (e.g. {@code MinecraftBridge1201} in :common). No Minecraft
+ * SPI implemented by the Minecraft adapters ({@code AbstractMinecraftBridge} in {@code shared/mc}, plus a
+ * {@code VersionBridge} per supported version in {@code :common-<ver>}). No Minecraft
  * types in this signature — see SPEC.md's "one seam" note.
  */
 public interface MinecraftBridge {

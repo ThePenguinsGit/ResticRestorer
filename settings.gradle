@@ -3,13 +3,22 @@ pluginManagement {
         maven { url "https://maven.fabricmc.net/" }
         maven { url "https://maven.architectury.dev/" }
         maven { url "https://files.minecraftforge.net/maven/" }
+        maven { url "https://maven.neoforged.net/releases/" }
         gradlePluginPortal()
     }
 }
 
 rootProject.name = 'resticrestorer'
 
+// Minecraft-free logic, shared by every version group.
 include 'core'
-include 'common'
-include 'fabric'
-include 'forge'
+
+// One module group per supported Minecraft version. No group is "the default" — every module name carries its
+// version key, and the shared source trees under shared/ carry none. See SPEC.md for how to add a version.
+include 'common-1201'
+include 'fabric-1201'
+include 'forge-1201'
+
+include 'common-1211'
+include 'fabric-1211'
+include 'neoforge-1211'

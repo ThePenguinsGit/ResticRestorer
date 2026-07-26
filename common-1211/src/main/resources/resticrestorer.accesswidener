@@ -1,0 +1,10 @@
+accessWidener	v2	named
+
+# 1.21.1 variant. Reaches the live per-dimension storage for raw entity/POI NBT write (see SPEC.md M4b/M4c).
+# The 1.20.5/1.21 refactor wrapped the IOWorker in SimpleRegionStorage (whose write/synchronize ARE public);
+# we only need to reach the private `simpleRegionStorage` field on the entity/section storages. Region NBT
+# needs no widening: ServerChunkCache.chunkMap is public and (as a ChunkStorage) exposes write/flushWorker.
+accessible field net/minecraft/server/level/ServerLevel entityManager Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;
+accessible field net/minecraft/world/level/entity/PersistentEntitySectionManager permanentStorage Lnet/minecraft/world/level/entity/EntityPersistentStorage;
+accessible field net/minecraft/world/level/chunk/storage/EntityStorage simpleRegionStorage Lnet/minecraft/world/level/chunk/storage/SimpleRegionStorage;
+accessible field net/minecraft/world/level/chunk/storage/SectionStorage simpleRegionStorage Lnet/minecraft/world/level/chunk/storage/SimpleRegionStorage;

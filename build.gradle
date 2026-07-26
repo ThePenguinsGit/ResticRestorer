@@ -4,8 +4,58 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
+// --- Supported Minecraft versions -------------------------------------------------------------------------
+// The single source of truth for what this repo builds. Every supported version is listed symmetrically —
+// none of them is a default — and every module name is derived from a key here (`common-<key>`,
+// `<loader>-<key>`). Adding a version = one row here + the matching properties in gradle.properties + a
+// `common-<key>` adapter module and its loader modules (see SPEC.md).
+ext.mcVersions = [
+        '1201': [mc: minecraft_version_1201, java: 17, loaders: ['fabric', 'forge'],
+                 architectury: architectury_api_version_1201],
+        '1211': [mc: minecraft_version_1211, java: 21, loaders: ['fabric', 'neoforge'],
+                 architectury: architectury_api_version_1211],
+]
+
+// Per-loader names that don't follow from the loader id alone (Architectury and Loom disagree on the casing
+// of "neoforge") plus the mod-metadata file whose ${version} placeholders get expanded.
+ext.loaderMeta = [
+        fabric  : [architectury: 'fabric', dev: 'developmentFabric', metadata: 'fabric.mod.json'],
+        forge   : [architectury: 'forge', dev: 'developmentForge', metadata: 'META-INF/mods.toml'],
+        neoforge: [architectury: 'neoForge', dev: 'developmentNeoForge', metadata: 'META-INF/neoforge.mods.toml'],
+]
+
+// Runtime libraries the mod bundles into every loader jar.
+ext.amqpClient = 'com.rabbitmq:amqp-client:5.21.0'
+ext.slf4jApi = 'org.slf4j:slf4j-api:2.0.13' // amqp-client requires slf4j-api at runtime
+
+// Per-module facts derived from the table above. `verKey` maps a module back to its version group, `common`
+// names the Architectury common module it builds against. :core is intentionally absent (MC-free, Java 17).
+ext.platformInfo = [:]
+mcVersions.each { key, v ->
+    def entry = { String loader -> [mc: v.mc, java: v.java, loader: loader, verKey: key, common: ":common-$key".toString()] }
+    platformInfo["common-$key".toString()] = entry(null)
+    v.loaders.each { loader -> platformInfo["$loader-$key".toString()] = entry(loader) }
+}
+
+// The architectury-plugin extension demands a value on the root project, but nothing MC-specific is built
+// here: every loom module overrides it with its own group's version, so this is an inert placeholder and
+// deliberately NOT a statement about which version is primary.
 architectury {
-    minecraft = project.minecraft_version
+    minecraft = mcVersions.values().first().mc
+}
+
+// Jar base name carries the MC version so the four shipped artifacts are unambiguous, e.g.
+// `ResticRestorer-1.21.1-neoforge`. commons get `-<mc>-common`; :core (unmapped) stays `-core`.
+def archivesNameFor = { proj ->
+    def info = rootProject.ext.platformInfo[proj.name]
+    if (info == null) {
+        return "$rootProject.archives_name-$proj.name"
+    }
+    return "$rootProject.archives_name-${info.mc}-${info.loader ?: 'common'}"
+}
+def javaLevelFor = { proj ->
+    def info = rootProject.ext.platformInfo[proj.name]
+    return (info?.java ?: 17) as int
 }
 
 allprojects {
@@ -17,21 +67,22 @@ subprojects {
     apply plugin: 'maven-publish'
 
     // Deferred via withType so this configures whenever the java plugin lands on the project —
-    // synchronously for loom-based modules (common/fabric/forge), later for :core (java-library
-    // is applied from core/build.gradle itself, which Gradle evaluates after this root script).
+    // synchronously for loom-based modules, later for :core (java-library is applied from core/build.gradle
+    // itself, which Gradle evaluates after this root script).
     plugins.withType(JavaPlugin).configureEach {
+        def javaLevel = javaLevelFor(project)
+
         base {
-            // Set up a suffixed format for the mod jar names, e.g. `example-fabric`.
-            archivesName = "$rootProject.archives_name-$project.name"
+            archivesName = archivesNameFor(project)
         }
 
         java {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
+            sourceCompatibility = JavaVersion.toVersion(javaLevel)
+            targetCompatibility = JavaVersion.toVersion(javaLevel)
         }
 
         tasks.withType(JavaCompile).configureEach {
-            it.options.release = 17
+            it.options.release = javaLevel
         }
 
         // Configure Maven publishing.
@@ -42,41 +93,149 @@ subprojects {
                     from components.java
                 }
             }
-
-            // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
             repositories {
-                // Add repositories to publish to here.
-                // Notice: This block does NOT have the same function as the block in the top level.
-                // The repositories here will be used for publishing your artifact, not for
-                // retrieving dependencies.
+                // The repositories here will be used for publishing your artifact, not for retrieving deps.
             }
         }
     }
 }
 
 // :core is a plain java-library module with NO Minecraft/Loom dependency (see SPEC.md M0) — it must stay
-// free of net.minecraft imports so future MC-version adapters can reuse it unchanged.
+// free of net.minecraft imports so the MC-version adapters can reuse it unchanged.
 configure(subprojects.findAll { it.name != 'core' }) {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
 
+    def info = rootProject.ext.platformInfo[project.name]
+
+    architectury {
+        minecraft = info.mc
+    }
+
     repositories {
-        // Add repositories to retrieve artifacts from in here.
-        // You should only use this when depending on other mods because
-        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-        // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-        // for more information about repositories.
+        // Loom adds the essential maven repositories automatically; NeoForge's artifacts live here.
+        maven { url "https://maven.neoforged.net/releases/" }
     }
 
     dependencies {
-        minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
+        minecraft "net.minecraft:minecraft:${info.mc}"
         mappings loom.officialMojangMappings()
     }
 
+    // Code that is identical on every supported version is not copied per version: it lives under shared/ and
+    // is compiled into each module against that module's own mappings and access widener. `shared/mc` holds
+    // the Minecraft-facing common code (see its package-info.java for the rules that keep it compiling on
+    // every version); `shared/<loader>` holds a loader entrypoint that is version-independent.
+    if (info.loader == null) {
+        sourceSets.main.java.srcDir rootProject.file('shared/mc/src/main/java')
+    } else {
+        def sharedJava = rootProject.file("shared/${info.loader}/src/main/java")
+        def sharedResources = rootProject.file("shared/${info.loader}/src/main/resources")
+        if (sharedJava.isDirectory()) {
+            sourceSets.main.java.srcDir sharedJava
+        }
+        if (sharedResources.isDirectory()) {
+            sourceSets.main.resources.srcDir sharedResources
+        }
+    }
+
     java {
-        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-        // if it is present.
-        // If you remove this line, sources will not be generated.
+        // Loom attaches sourcesJar to a RemapSourcesJar task and to `build` if present.
         withSourcesJar()
+    }
+
+    // --- Loader modules ------------------------------------------------------------------------------------
+    // Everything below is identical for all four loader modules apart from the loader's own name, so it is
+    // generated here rather than copy-pasted into each build script. Those scripts keep only what is genuinely
+    // loader-specific: the Loom block, the loader artifact, and the loader's permissions API.
+    if (info.loader != null) {
+        def loader = rootProject.ext.loaderMeta[info.loader]
+        def forgeFamily = info.loader != 'fabric'
+
+        apply plugin: 'com.github.johnrengelman.shadow'
+
+        architectury {
+            platformSetupLoomIde()
+            "${loader.architectury}"()
+        }
+
+        configurations {
+            common {
+                canBeResolved = true
+                canBeConsumed = false
+            }
+            compileClasspath.extendsFrom common
+            runtimeClasspath.extendsFrom common
+            named(loader.dev) { extendsFrom common }
+
+            // Files in this configuration are bundled into the mod jar by the Shadow plugin. (Not the plugin's
+            // own `shadow` configuration, which is meant for excluding files.)
+            shadowBundle {
+                canBeResolved = true
+                canBeConsumed = false
+                if (forgeFamily) {
+                    // Forge and NeoForge already ship slf4j-api as a named JPMS module; bundling a second copy
+                    // makes ModLauncher's module resolution hard-fail with "Modules resticrestorer and
+                    // org.slf4j export package ... to module minecraft/forge". Their copy satisfies
+                    // amqp-client's runtime requirement regardless.
+                    exclude group: 'org.slf4j', module: 'slf4j-api'
+                }
+            }
+        }
+
+        dependencies {
+            common(project(path: info.common, configuration: 'namedElements')) { transitive false }
+            shadowBundle project(path: info.common, configuration: "transformProduction${loader.architectury.capitalize()}")
+
+            // :core (and its transitive amqp-client) has to reach the dev-run classpath through the "common"
+            // configuration: the Forge-family ModLauncher classloader ignores plain `implementation` project
+            // deps. Fabric's Knot loader doesn't need it, but keeping all loaders uniform avoids surprises.
+            if (forgeFamily) {
+                common(project(':core')) { exclude group: 'org.slf4j' }
+                implementation(project(':core')) { exclude group: 'org.slf4j' }
+                implementation(rootProject.ext.amqpClient) { exclude group: 'org.slf4j' }
+            } else {
+                common project(':core')
+                implementation project(':core')
+                implementation rootProject.ext.amqpClient
+                implementation rootProject.ext.slf4jApi
+            }
+
+            shadowBundle project(':core')
+            shadowBundle rootProject.ext.amqpClient
+            if (!forgeFamily) {
+                shadowBundle rootProject.ext.slf4jApi
+            }
+        }
+
+        processResources {
+            def expansions = [
+                    version             : project.version,
+                    minecraftVersion    : info.mc,
+                    javaVersion         : info.java,
+                    architecturyVersion : rootProject.ext.mcVersions[info.verKey].architectury,
+                    fabricLoaderVersion : rootProject.fabric_loader_version,
+            ]
+            expansions.each { key, value -> inputs.property key, value }
+
+            filesMatching(loader.metadata) {
+                expand expansions
+            }
+
+            if (info.loader == 'fabric') {
+                // Fabric Loader resolves fabric.mod.json's "accessWidener" against this project's own resource
+                // root in dev, not the common module's (where the file lives) — copy it in alongside.
+                from(rootProject.file("${info.common.substring(1)}/src/main/resources/resticrestorer.accesswidener"))
+            }
+        }
+
+        shadowJar {
+            configurations = [project.configurations.shadowBundle]
+            archiveClassifier = 'dev-shadow'
+        }
+
+        remapJar {
+            input.set shadowJar.archiveFile
+        }
     }
 }

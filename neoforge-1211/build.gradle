@@ -1,0 +1,18 @@
+// The Shadow plugin, Architectury platform setup, common/shadowBundle wiring, mod-metadata expansion and the
+// shadowJar -> remapJar chain are generated for every loader module by the root build script. Only genuinely
+// loader-specific configuration lives here.
+
+loom {
+    // Puts Loom in NeoForge mode (creates the `neoForge` dependency configuration). The access transformer at
+    // META-INF/accesstransformer.cfg is auto-detected — it's the AT equivalent of :common-1211's access widener.
+    // Unlike the Forge module, this one can't generate it: architectury-loom 1.10's NeoForge extension has no
+    // `convertAccessWideners`, so the AT is maintained by hand and must be kept in sync with the widener.
+    neoForge {
+    }
+}
+
+dependencies {
+    neoForge "net.neoforged:neoforge:$rootProject.neoforge_version_1211"
+
+    modImplementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version_1211"
+}

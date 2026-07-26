@@ -29,16 +29,34 @@ public record RestoreConfig(BackupConfig backup, WorldConfig world, RabbitMqConf
      *       stored path), so leave it blank to inherit; set it only when the restored files land at a different
      *       subpath than the include pattern.</li>
      * </ul>
+     *
+     * <p>{@code snapshotCacheRefreshMinutes} is how often the snapshot list backing the command completions is
+     * rebuilt in the background; the commands never list snapshots on demand.
      */
     public record BackupConfig(String provider, ResticConfig restic, RestApiConfig rest,
-                               String snapshotWorldPrefix, String serverWorldPrefix) {
+                               String snapshotWorldPrefix, String serverWorldPrefix,
+                               int snapshotCacheRefreshMinutes) {
+        public static final int DEFAULT_SNAPSHOT_CACHE_REFRESH_MINUTES = 30;
+
         public static BackupConfig createDefault() {
-            return new BackupConfig("cli", ResticConfig.createDefault(), RestApiConfig.createDefault(), "/world", "");
+            return new BackupConfig("cli", ResticConfig.createDefault(), RestApiConfig.createDefault(), "/world", "",
+                    DEFAULT_SNAPSHOT_CACHE_REFRESH_MINUTES);
         }
 
         /** The mirror-root base under the restore target; falls back to {@link #snapshotWorldPrefix} when unset. */
         public String effectiveServerWorldPrefix() {
             return (serverWorldPrefix == null || serverWorldPrefix.isBlank()) ? snapshotWorldPrefix : serverWorldPrefix;
+        }
+
+        /**
+         * Snapshot-cache refresh interval in minutes, falling back to {@value #DEFAULT_SNAPSHOT_CACHE_REFRESH_MINUTES}
+         * for any non-positive value — including the {@code 0} Gson leaves behind for a config file written before
+         * this key existed.
+         */
+        public int effectiveSnapshotCacheRefreshMinutes() {
+            return snapshotCacheRefreshMinutes > 0
+                    ? snapshotCacheRefreshMinutes
+                    : DEFAULT_SNAPSHOT_CACHE_REFRESH_MINUTES;
         }
     }
 

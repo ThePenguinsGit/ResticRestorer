@@ -1,0 +1,36 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "All Rights Reserved"
+
+[[mods]]
+modId = "resticrestorer"
+version = "${version}"
+displayName = "ResticRestorer"
+authors = ""
+description = '''
+Restores an individual chunk in place from a restic backup of the world, via command or RabbitMQ.
+'''
+
+[[accessTransformers]]
+file = "accesstransformer.cfg"
+
+[[dependencies.resticrestorer]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.resticrestorer]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${minecraftVersion},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.resticrestorer]]
+modId = "architectury"
+type = "required"
+versionRange = "[${architecturyVersion},)"
+ordering = "AFTER"
+side = "BOTH"

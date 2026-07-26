@@ -1,0 +1,20 @@
+// The Shadow plugin, Architectury platform setup, common/shadowBundle wiring, mod-metadata expansion and the
+// shadowJar -> remapJar chain are generated for every loader module by the root build script. Only genuinely
+// loader-specific configuration lives here.
+
+loom {
+    forge {
+        // Forge ignores Fabric access wideners at runtime, so convert our (common-module) access widener into
+        // a Forge access transformer that IS applied on a production server. Without this, chunk entity/POI
+        // writes — which reach the live IOWorkers through widened fields — throw IllegalAccessError on Forge.
+        // It's listed as "extra" because the widener physically lives in :common-1201's resources, not here.
+        convertAccessWideners = true
+        extraAccessWideners.add "resticrestorer.accesswidener"
+    }
+}
+
+dependencies {
+    forge "net.minecraftforge:forge:$rootProject.forge_version_1201"
+
+    modImplementation "dev.architectury:architectury-forge:$rootProject.architectury_api_version_1201"
+}

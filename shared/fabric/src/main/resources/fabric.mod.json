@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "resticrestorer",
+  "version": "${version}",
+  "name": "ResticRestorer",
+  "description": "Restores an individual chunk in place from a restic backup of the world, via command or RabbitMQ.",
+  "authors": [
+    ""
+  ],
+  "contact": {
+    "homepage": ""
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/resticrestorer/icon.png",
+  "environment": "*",
+  "accessWidener": "resticrestorer.accesswidener",
+  "entrypoints": {
+    "main": [
+      "work.penguinnet.resticrestorer.fabric.ResticrestorerFabric"
+    ],
+    "client": [
+      "work.penguinnet.resticrestorer.fabric.client.ResticrestorerFabricClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${fabricLoaderVersion}",
+    "minecraft": "~${minecraftVersion}",
+    "java": ">=${javaVersion}",
+    "architectury": ">=${architecturyVersion}",
+    "fabric-api": "*"
+  }
+}

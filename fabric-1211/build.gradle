@@ -1,0 +1,18 @@
+// The Shadow plugin, Architectury platform setup, common/shadowBundle wiring, mod-metadata expansion and the
+// shadowJar -> remapJar chain are generated for every loader module by the root build script. Only genuinely
+// loader-specific dependencies live here.
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version_1211"
+
+    modImplementation "dev.architectury:architectury-fabric:$rootProject.architectury_api_version_1211"
+
+    // Exclude its transitive fabric-api pin: it requests a version newer than this project targets,
+    // which otherwise drags in an incompatible fabric-api and breaks mod resolution at boot.
+    modImplementation("me.lucko:fabric-permissions-api:$rootProject.fabric_permissions_version_1211") {
+        exclude group: "net.fabricmc.fabric-api"
+    }
+    include "me.lucko:fabric-permissions-api:$rootProject.fabric_permissions_version_1211"
+}
